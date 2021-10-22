@@ -4,145 +4,100 @@ using System.Collections.Generic;
 namespace Composite_RealWorldExample
 {
     /// <summary>
-    /// Bridge Design Pattern
+    /// Composite Design Pattern
     /// </summary>
     public class Program
     {
         public static void Main(string[] args)
         {
-            // Create RefinedAbstraction
-            var customers = new Customers();
-            // Set ConcreteImplementor
-            customers.Data = new CustomersData("Chicago");
-            // Exercise the bridge
-            customers.Show();
-            customers.Next();
-            customers.Show();
-            customers.Next();
-            customers.Show();
-            customers.Add("Henry Velasquez");
-            customers.ShowAll();
+            // Create a tree structure 
+            CompositeElement root = new CompositeElement("Picture");
+            root.Add(new PrimitiveElement("Red Line"));
+            root.Add(new PrimitiveElement("Blue Circle"));
+            root.Add(new PrimitiveElement("Green Box"));
+            // Create a branch
+            CompositeElement comp = new CompositeElement("Two Circles");
+            comp.Add(new PrimitiveElement("Black Circle"));
+            comp.Add(new PrimitiveElement("White Circle"));
+            root.Add(comp);
+            // Add and remove a PrimitiveElement
+            PrimitiveElement pe = new PrimitiveElement("Yellow Line");
+            root.Add(pe);
+            root.Remove(pe);
+            // Recursively display nodes
+            root.Display(1);
             // Wait for user
             Console.ReadKey();
         }
     }
     /// <summary>
-    /// The 'Abstraction' class
+    /// The 'Component' Treenode
     /// </summary>
-    public class CustomersBase
+    public abstract class DrawingElement
     {
-        private DataObject dataObject;
-        public DataObject Data
+        protected string name;
+        // Constructor
+        public DrawingElement(string name)
         {
-            set { dataObject = value; }
-            get { return dataObject; }
+            this.name = name;
         }
-        public virtual void Next()
+        public abstract void Add(DrawingElement d);
+        public abstract void Remove(DrawingElement d);
+        public abstract void Display(int indent);
+    }
+    /// <summary>
+    /// The 'Leaf' class
+    /// </summary>
+    public class PrimitiveElement : DrawingElement
+    {
+        // Constructor
+        public PrimitiveElement(string name)
+            : base(name)
         {
-            dataObject.NextRecord();
         }
-        public virtual void Prior()
+        public override void Add(DrawingElement c)
         {
-            dataObject.PriorRecord();
+            Console.WriteLine(
+                "Cannot add to a PrimitiveElement");
         }
-        public virtual void Add(string customer)
+        public override void Remove(DrawingElement c)
         {
-            dataObject.AddRecord(customer);
+            Console.WriteLine(
+                "Cannot remove from a PrimitiveElement");
         }
-        public virtual void Delete(string customer)
+        public override void Display(int indent)
         {
-            dataObject.DeleteRecord(customer);
-        }
-        public virtual void Show()
-        {
-            dataObject.ShowRecord();
-        }
-        public virtual void ShowAll()
-        {
-            dataObject.ShowAllRecords();
+            Console.WriteLine(
+                new String('-', indent) + " " + name);
         }
     }
     /// <summary>
-    /// The 'RefinedAbstraction' class
+    /// The 'Composite' class
     /// </summary>
-    public class Customers : CustomersBase
+    public class CompositeElement : DrawingElement
     {
-        public override void ShowAll()
+        List<DrawingElement> elements = new List<DrawingElement>();
+        // Constructor
+        public CompositeElement(string name)
+            : base(name)
         {
-            // Add separator lines
-            Console.WriteLine();
-            Console.WriteLine("------------------------");
-            base.ShowAll();
-            Console.WriteLine("------------------------");
         }
-    }
-    /// <summary>
-    /// The 'Implementor' abstract class
-    /// </summary>
-    public abstract class DataObject
-    {
-        public abstract void NextRecord();
-        public abstract void PriorRecord();
-        public abstract void AddRecord(string name);
-        public abstract void DeleteRecord(string name);
-        public abstract string GetCurrentRecord();
-        public abstract void ShowRecord();
-        public abstract void ShowAllRecords();
-    }
-    /// <summary>
-    /// The 'ConcreteImplementor' class
-    /// </summary>
-    public class CustomersData : DataObject
-    {
-        private readonly List<string> customers = new List<string>();
-        private int current = 0;
-        private string city;
-        public CustomersData(string city)
+        public override void Add(DrawingElement d)
         {
-            this.city = city;
-            // Loaded from a database 
-            customers.Add("Jim Jones");
-            customers.Add("Samual Jackson");
-            customers.Add("Allen Good");
-            customers.Add("Ann Stills");
-            customers.Add("Lisa Giolani");
+            elements.Add(d);
         }
-        public override void NextRecord()
+        public override void Remove(DrawingElement d)
         {
-            if (current <= customers.Count - 1)
+            elements.Remove(d);
+        }
+        public override void Display(int indent)
+        {
+            Console.WriteLine(new String('-', indent) +
+                "+ " + name);
+            // Display each child element on this node
+            foreach (DrawingElement d in elements)
             {
-                current++;
-            }
-        }
-        public override void PriorRecord()
-        {
-            if (current > 0)
-            {
-                current--;
-            }
-        }
-        public override void AddRecord(string customer)
-        {
-            customers.Add(customer);
-        }
-        public override void DeleteRecord(string customer)
-        {
-            customers.Remove(customer);
-        }
-        public override string GetCurrentRecord()
-        {
-            return customers[current];
-        }
-        public override void ShowRecord()
-        {
-            Console.WriteLine(customers[current]);
-        }
-        public override void ShowAllRecords()
-        {
-            Console.WriteLine("Customer City: " + city);
-            foreach (string customer in customers)
-            {
-                Console.WriteLine(" " + customer);
+                d.Display(indent + 2);
             }
         }
     }
